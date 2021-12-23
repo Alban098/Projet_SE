@@ -1,0 +1,9 @@
+{
+  "plugins": [
+    {
+      "name": "RGB_Strip",
+      "class": "RGBStrip.js",
+      "config": "RGBStrip.json"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+
+remote_server/node_modules/
+
+mobile_app/.idea/
+
+mobile_app/gradle/
+
+remote_server/.idea/
+
+remote_server/.env
+
+remote_server/package-lock.json
+
+remote_server/remote_server.iml

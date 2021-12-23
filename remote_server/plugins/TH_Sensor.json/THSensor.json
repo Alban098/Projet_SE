@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "name": "Temp Sensor 1",
+      "address": "172.20.10.12",
+      "controls": [
+        {"id":  "0", "name":  "Temperature", "type":  "float", "control": "temperature", "read_only": true},
+        {"id":  "1", "name":  "Humidity", "type":  "float", "control": "humidity", "read_only": true}
+      ]
+    }
+  ]
+}
