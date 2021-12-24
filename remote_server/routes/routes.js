@@ -7,6 +7,7 @@ module.exports = router => {
     router.get('/', Controller.indexAction);
 
     /* ======================= The above routes should be placed behind Auth0 ======================= */
+    router.get('/reload', Controller.reloadAction);
     router.get('/fetch', Controller.fetchItemsAction);
     router.post('/apply', Controller.applyAction);
     router.get('/synchronize', Controller.synchronizeAction);

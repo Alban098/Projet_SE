@@ -5,6 +5,10 @@ const ControlUnit = require("./ControlUnit");
  */
 class ComboControlUnit extends ControlUnit {
 
+    /**
+     * List of choices of the ComboBox
+     * @type {[]}
+     */
     choices = [];
 
     constructor(control) {

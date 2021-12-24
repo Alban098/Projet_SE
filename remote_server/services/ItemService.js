@@ -1,11 +1,13 @@
-exports.items = [];
+exports.clearItems = function() {
+    this._items = [];
+}
 
 /**
  * Register an item into the service
  * @param item the Item to register
  */
 exports.registerItem = function(item) {
-    this.items[item.id] = item;
+    this._items[item.id] = item;
 }
 
 /**
@@ -14,7 +16,7 @@ exports.registerItem = function(item) {
  * @returns {Item} the selected Item
  */
 exports.getItem = function(id) {
-    return this.items[id];
+    return this._items[id];
 }
 
 /**
@@ -22,5 +24,9 @@ exports.getItem = function(id) {
  * @returns {[Item]}
  */
 exports.getAll = function() {
-    return this.items;
+    return this._items;
+}
+
+exports.getCount = function() {
+    return Object.keys(this._items).length;
 }

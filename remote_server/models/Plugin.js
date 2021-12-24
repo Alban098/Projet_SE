@@ -36,9 +36,7 @@ class Plugin {
 
         //Create each item and populate them according to config file
         let config = JSON.parse(fs.readFileSync(this._config_file));
-        config.items.forEach(item => {
-            this._items.push(new itemClass(randomUUID(), item.name, item.address, item.controls))
-        })
+        config.items.forEach(item => this._items.push(new itemClass(randomUUID(), item.name, item.address, item.controls)));
     }
 
     get name() {

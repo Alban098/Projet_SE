@@ -2,14 +2,14 @@
   "items": [
     {
       "name": "LED Strip 1",
-      "address": "172.20.10.11",
+      "address": "192.168.1.77",
       "controls": [
-        {"id":  "0", "name":  "Intensity", "type":  "int", "min": 0, "max": 255, "control": "brightness"},
-        {"id":  "1", "name":  "Color", "type":  "color", "control": "user_color"},
-        {"id":  "2", "name":  "Effect", "type":  "combo", "api_fill_path": "effects=0", "control": "effect"},
-        {"id":  "3", "name":  "Effect Speed", "type":  "int", "min": 0, "max": 255, "control": "speed"},
-        {"id":  "4", "name":  "Palette", "type":  "combo", "api_fill_path": "palettes=0", "control": "palette"},
-        {"id":  "5", "name":  "Enabled", "type":  "boolean", "control": "on", "read_only":  false}
+        {"name": "Intensity"},
+        {"name": "Color"},
+        {"name": "Effect"},
+        {"name": "Effect Speed"},
+        {"name": "Palette"},
+        {"name": "Enabled"}
       ]
     }
   ]

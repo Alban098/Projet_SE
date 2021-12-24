@@ -4,6 +4,11 @@
       "name": "RGB_Strip",
       "class": "RGBStrip.js",
       "config": "RGBStrip.json"
+    },
+    {
+      "name": "TH_Sensor",
+      "class": "THSensor.js",
+      "config": "THSensor.json"
     }
   ]
 }

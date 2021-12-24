@@ -1,12 +1,64 @@
 const Item = require("../../models/Item");
 const http = require('http');
+const {randomUUID} = require("crypto");
 
 
 class RGBStrip extends Item {
 
-    constructor(id, name, address, controls) {
-        super(id, name, address, controls);
-        console.log(this.address + " loaded");
+    _api_URL = "/api";
+
+    _pluginsControls = [
+        {arg: "palette", name: "Palette", type: "combo", fill_arg: "palettes=0"},
+        {arg: "effect", name: "Effect", type: "combo", fill_arg: "effects=0"},
+        {arg: "user_color", name: "Color", type: "color"},
+        {arg: "on", name: "Enabled", type: "boolean"},
+        {arg: "speed", name: "Effect Speed", type: "int"},
+        {arg: "brightness", name: "Intensity", type: "int"}
+    ]
+
+    _control_ids_by_arg = [];
+    _control_args_by_id = [];
+
+    constructor(id, name, address, enabledControls) {
+        super(id, name, address);
+        for (let index in this._pluginsControls) {
+            let pluginsControl = this._pluginsControls[index];
+            let id = randomUUID();
+            let controlUnit = {id: id, name: pluginsControl.name, type: pluginsControl.type, control: pluginsControl.arg, present: false, read_only: false};
+            this._control_ids_by_arg[pluginsControl.arg] = id;
+            this._control_args_by_id[id] = pluginsControl.arg;
+            for (let i in enabledControls) {
+                if (enabledControls[i].name === pluginsControl.name)
+                    controlUnit.present = true;
+            }
+            if (pluginsControl.type === "combo") {
+                controlUnit.choices = [];
+                let options = {
+                    host: this.address,
+                    path: this._api_URL,
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Length': Buffer.byteLength(pluginsControl.fill_arg)
+                    }
+                };
+                let self = this;
+                let request = http.request(options, (res) => {
+                    res.setEncoding('utf8');
+                    res.on('data', function (chunk) {
+                        //Fetch choices and then save them to the ControlUnit
+                        let choices = JSON.parse(chunk);
+                        for (let choice in choices)
+                            controlUnit.choices[choices[choice]] = choice;
+                        self.addControl(controlUnit)
+                    });
+                });
+                request.write(pluginsControl.fill_arg);
+                request.end();
+            } else {
+                this.addControl(controlUnit);
+            }
+        }
     }
 
     fetch() {
@@ -15,18 +67,16 @@ class RGBStrip extends Item {
 
     propagate() {
         let data = "";
-        for (let control in this.controls)
-            data += control + "=" + this.controls[control].value + "&";
-        console.log(this.controls);
-        console.log(data);
+        for (let id in this.controls)
+            data += this._control_args_by_id[id] + "=" + this.controls[id].value + "&";
         return this._send('POST', data);
     }
 
     _send(method, data) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             let options = {
                 host: this.address,
-                path: '/api',
+                path: this._api_URL,
                 method: method,
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -34,14 +84,14 @@ class RGBStrip extends Item {
                 }
             };
 
-            let item = this;
+            let self = this;
             let request = http.request(options, (res) => {
                 res.setEncoding('utf8');
                 res.on('data', function (chunk) {
-                    let status = JSON.parse(chunk)
+                    let status = JSON.parse(chunk);
                     for (let arg in status) {
-                        if (item.controls[arg] !== undefined)
-                            item.controls[arg].value = status[arg];
+                        if (self.controls[self._control_ids_by_arg[arg]] !== undefined)
+                            self.controls[self._control_ids_by_arg[arg]].value = status[arg];
                     }
                     resolve(0);
                 });

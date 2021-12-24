@@ -7,14 +7,14 @@ class ControlUnit {
     _name;
     _type;
     _value;
-    _control;
     _editable;
+    _present;
 
     constructor(control) {
         this._id = control.id;
         this._name = control.name;
         this._type = control.type;
-        this._control = control.control;
+        this._present = control.present;
         this._editable = control.read_only === undefined || control.read_only !== true;
     }
 
@@ -34,16 +34,17 @@ class ControlUnit {
         return this._name;
     }
 
-    get control() {
-        return this._control;
-    }
-
     get type() {
         return this._type;
     }
 
     get editable() {
         return this._editable;
+    }
+
+
+    get present() {
+        return this._present;
     }
 }
 

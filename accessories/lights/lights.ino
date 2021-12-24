@@ -22,7 +22,7 @@
 #define PARAM_PALETTE_LIST "palettes"
 
 const char* ssid     = "SSID";
-const char* password = "KEY";
+const char* password = "PASSWORD";
 
 Adafruit_NeoPixel leds = Adafruit_NeoPixel(NUM_PIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
 AsyncWebServer server(80);
@@ -87,7 +87,7 @@ AsyncResponseStream* generateStatusJson(AsyncWebServerRequest *request) {
 
 AsyncResponseStream* generateEffectsJson(AsyncWebServerRequest *request) {
   AsyncResponseStream *response = request->beginResponseStream("application/json");
-  response->addHeader("type","status");
+  response->addHeader("type","effects");
   DynamicJsonDocument doc(2048);
   for (int i = 0; i < getNbEffects(); i++) {
     doc[effects[i]->getLabel()] = i;
@@ -100,7 +100,7 @@ AsyncResponseStream* generateEffectsJson(AsyncWebServerRequest *request) {
 
 AsyncResponseStream* generatePalettesJson(AsyncWebServerRequest *request) {
   AsyncResponseStream *response = request->beginResponseStream("application/json");
-  response->addHeader("type","status");
+  response->addHeader("type","palettes");
   DynamicJsonDocument doc(2048);
   for (int i = 0; i < getNbPalettes(); i++) {
     doc[palettes[i]->getLabel()] = i;
@@ -113,23 +113,24 @@ AsyncResponseStream* generatePalettesJson(AsyncWebServerRequest *request) {
 
 void handleGet(AsyncWebServerRequest *request) {
   int paramsNr = request->params();
-  Serial.println("get");
   for(int i=0; i<paramsNr; i++){
     AsyncWebParameter* p = request->getParam(i);
     Serial.println(p->name());
     if (strcmp(p->name().c_str(), PARAM_STATUS) == 0) {
       request->send(generateStatusJson(request));
+      break;
     } else if (strcmp(p->name().c_str(), PARAM_EFFECT_LIST) == 0) {
       request->send(generateEffectsJson(request));
+      break;
     } else if (strcmp(p->name().c_str(), PARAM_PALETTE_LIST) == 0) {
       request->send(generatePalettesJson(request));
+      break;
     }
   }
 }
 
 void handlePost(AsyncWebServerRequest *request) {
   int paramsNr = request->params();
-  Serial.println("get");
   for(int i=0; i<paramsNr; i++){
     AsyncWebParameter* p = request->getParam(i);
     Serial.println(p->name());

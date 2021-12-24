@@ -1,6 +1,7 @@
 'use strict';
 
 const PluginService     = require('./services/PluginService')
+const ItemService     = require('./services/ItemService')
 const express    = require('express');
 const { auth }   = require('express-oauth2-jwt-bearer');
 const app        = express();
@@ -16,7 +17,7 @@ const checkJwt = auth({
     issuerBaseURL: `secret`,
 });
 
-PluginService.loadPlugins();
+PluginService.loadPlugins().then(() => console.log(PluginService.getCount() + " plugins and " + ItemService.getCount() + " items loaded"));
 
 app.use(express.json());
 

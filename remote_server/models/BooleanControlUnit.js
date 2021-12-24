@@ -7,7 +7,7 @@ class BooleanControlUnit extends ControlUnit {
 
     constructor(control) {
         super(control);
-        this._value = false;
+        this._value = 0;
     }
 
     get value() {
