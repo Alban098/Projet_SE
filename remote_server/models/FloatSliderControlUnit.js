@@ -10,8 +10,8 @@ class FloatSliderControlUnit extends ControlUnit {
 
     constructor(control) {
         super(control);
-        this._min = control.min !== undefined ? control.min : -Infinity;
-        this._max = control.max !== undefined ? control.max : +Infinity;
+        this._min = control.min !== undefined ? control.min : 0;
+        this._max = control.max !== undefined ? control.max : 100;
         this._value = 0.0;
     }
 

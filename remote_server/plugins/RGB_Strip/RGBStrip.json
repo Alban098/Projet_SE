@@ -8,8 +8,7 @@
         {"name": "Color"},
         {"name": "Effect"},
         {"name": "Effect Speed"},
-        {"name": "Palette"},
-        {"name": "Enabled"}
+        {"name": "Palette"}
       ]
     }
   ]

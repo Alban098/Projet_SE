@@ -11,7 +11,6 @@ class RGBStrip extends Item {
         {arg: "palette", name: "Palette", type: "combo", fill_arg: "palettes=0"},
         {arg: "effect", name: "Effect", type: "combo", fill_arg: "effects=0"},
         {arg: "user_color", name: "Color", type: "color"},
-        {arg: "on", name: "Enabled", type: "boolean"},
         {arg: "speed", name: "Effect Speed", type: "int"},
         {arg: "brightness", name: "Intensity", type: "int"}
     ]
@@ -52,6 +51,9 @@ class RGBStrip extends Item {
                             controlUnit.choices[choices[choice]] = choice;
                         self.addControl(controlUnit)
                     });
+                    res.on('error', function(err) {
+                        console.error(this.name + " : Combo (" + name + ") failed to report choices [" + err.name + "]")
+                    })
                 });
                 request.write(pluginsControl.fill_arg);
                 request.end();
@@ -95,6 +97,10 @@ class RGBStrip extends Item {
                     }
                     resolve(0);
                 });
+                res.on('error', function(err) {
+                    console.error(this.name + " (" + self.address + ") failed to respond [" + err.name + "]")
+                    resolve(0);
+                })
             });
             request.write(data);
             request.end();

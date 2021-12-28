@@ -1,4 +1,4 @@
-package com.alban098
+package com.alban098.projet
 
 import org.junit.Test
 

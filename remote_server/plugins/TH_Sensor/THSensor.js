@@ -64,6 +64,10 @@ class THSensor extends Item {
                     }
                     resolve(0);
                 });
+                res.on('error', function(err) {
+                    console.error(this.name + " (" + self.address + ") failed to respond [" + err.name + "]")
+                    resolve(0);
+                })
             });
             request.write(data);
             request.end();

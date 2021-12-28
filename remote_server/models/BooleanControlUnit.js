@@ -11,7 +11,7 @@ class BooleanControlUnit extends ControlUnit {
     }
 
     get value() {
-        return super.value;
+        return this._value;
     }
 
     set value(value) {

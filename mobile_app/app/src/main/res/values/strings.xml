@@ -1,3 +1,18 @@
 <resources>
-    <string name="app_name">mobile_app</string>
+    <string name="app_name">Mobile Interface SE 1.0</string>
+
+    <string name="com_auth0_client_id">B5uygV4u6e2H3ch2Xh1eOdOauAKaU9H3</string>
+    <string name="com_auth0_domain">dev-i2b9orck.us.auth0.com</string>
+    <string name="com_auth0_scheme">https</string>
+
+    <string name="api_url">http://192.168.1.68:8080/api</string>
+
+    <string name="reload_items">Reload Items</string>
+    <string name="name">Name</string>
+    <string name="refresh">Refresh</string>
+    <string name="authenticate">Authenticate</string>
+    <string name="log_out">Log out</string>
+    <string name="login_message">Log in using the Browser</string>
+    <string name="metadata">Metadata</string>
+    <string name="launch_app">Launch App</string>
 </resources>

@@ -4,7 +4,8 @@ const PluginService = require('../services/PluginService');
 exports.plugins = [];
 
 exports.indexAction = async function(req, res) {
-
+    console.log(req.headers);
+    res.json(req.headers)
 }
 
 /**
@@ -33,8 +34,10 @@ exports.fetchItemsAction = async function(req, res) {
         let item = ItemService.getItem(id);
 
         //If it exist, push its status to the list
-        if (item !== undefined)
-            items.items.push(item.generateJSONMetaData());
+        if (item !== undefined) {
+            let json = await item.generateJSONMetaData(true)
+            items.items.push(json);
+        }
     }
 
     //return the list
@@ -44,13 +47,11 @@ exports.fetchItemsAction = async function(req, res) {
 /**
  * Example JSON Request
     {
-        "item": {
-            "id": "5caa7157-1a9e-4a6f-ac3e-761ec30cbd36",
-            "controls": [
-                {"id": "3b9aa06c-6f2c-449e-8ae0-a488a2246464", "value": 255},
-                {"id": "fd1a63e8-b9b2-4d1f-8900-a590e013e916", "value": 16711935}
-            ]
-        }
+        "id": "5caa7157-1a9e-4a6f-ac3e-761ec30cbd36",
+        "controls": [
+            {"id": "3b9aa06c-6f2c-449e-8ae0-a488a2246464", "value": 255},
+            {"id": "fd1a63e8-b9b2-4d1f-8900-a590e013e916", "value": 16711935}
+        ]
     }
 
     Response : Same as Synchronize with the ID of the altered Item
@@ -61,7 +62,7 @@ exports.applyAction = async function(req, res) {
     let json = {};
 
     //get the ID
-    let id = req.body.item.id;
+    let id = req.body.id;
 
     //If the id exist in the API
     if (id !== undefined) {
@@ -71,11 +72,12 @@ exports.applyAction = async function(req, res) {
         if (item !== undefined) {
 
             //Get all the altered controls
-            let controls = req.body.item.controls;
-            item.updateControls(controls);
-
-            //propagate changes and wait for the
-            await item.propagate();
+            let controls = req.body.controls;
+            if (controls !== undefined) {
+                item.updateControls(controls);
+                //propagate changes and wait for the
+                await item.propagate();
+            }
             json = await item.toJSON(false);
         } else {
             json.error = "Invalid item ID !"
@@ -142,7 +144,6 @@ exports.synchronizeAction = async function(req, res) {
 
     //Get the ID
     let id = req.body.id;
-
     //If the ID exist, fetch the item
     if (id !== undefined) {
         let item = ItemService.getItem(id);
