@@ -1,4 +1,5 @@
 const Item = require("../../models/Item");
+const ItemService = require('../../services/ItemService');
 const http = require('http');
 const {randomUUID} = require("crypto");
 
@@ -66,6 +67,7 @@ class THSensor extends Item {
                 });
                 res.on('error', function(err) {
                     console.error(this.name + " (" + self.address + ") failed to respond [" + err.name + "]")
+                    ItemService.removeItem(this._id)
                     resolve(0);
                 })
             });

@@ -10,6 +10,10 @@ exports.registerItem = function(item) {
     this._items[item.id] = item;
 }
 
+exports.removeItem = function(id) {
+    this._items[id] = undefined;
+}
+
 /**
  * Get an Item from its UUID
  * @param id the Item UUID

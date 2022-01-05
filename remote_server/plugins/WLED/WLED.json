@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "name": "Bureau",
+      "address": "10.5.0.5",
+      "controls": [
+        {"name": "On"},
+        {"name": "Brightness"},
+        {"name": "Primary Color"},
+        {"name": "Secondary Color"},
+        {"name": "Tertiary Color"},
+        {"name": "Effect"},
+        {"name": "Effect Speed"},
+        {"name": "Effect Intensity"},
+        {"name": "Palette"}
+      ]
+    },
+    {
+      "name": "Table de Nuit",
+      "address": "10.5.0.7",
+      "controls": [
+        {"name": "On"},
+        {"name": "Brightness"},
+        {"name": "Primary Color"},
+        {"name": "Secondary Color"},
+        {"name": "Tertiary Color"},
+        {"name": "Effect"},
+        {"name": "Effect Speed"},
+        {"name": "Effect Intensity"},
+        {"name": "Palette"}
+      ]
+    }
+  ]
+}
