@@ -1,4 +1,5 @@
 const Item = require("../../models/Item");
+const ItemService = require('../../services/ItemService');
 const http = require('http');
 const { randomUUID } = require("crypto");
 
@@ -52,7 +53,8 @@ class RGBStrip extends Item {
                         self.addControl(controlUnit)
                     });
                     res.on('error', function(err) {
-                        console.error(this.name + " : Combo (" + name + ") failed to report choices [" + err.name + "]")
+                        console.error(this.name + " : Combo (" + name + ") failed to report choices [" + err.name + "]");
+                        ItemService.removeItem(this._id);
                     })
                 });
                 request.write(pluginsControl.fill_arg);
@@ -98,7 +100,8 @@ class RGBStrip extends Item {
                     resolve(0);
                 });
                 res.on('error', function(err) {
-                    console.error(this.name + " (" + self.address + ") failed to respond [" + err.name + "]")
+                    console.error(this.name + " (" + self.address + ") failed to respond [" + err.name + "]");
+                    ItemService.removeItem(this._id);
                     resolve(0);
                 })
             });
