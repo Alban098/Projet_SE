@@ -1,31 +1,23 @@
-#include "effects.h"
+#include "Effects.h"
 
-void Rainbow::renderTo(Adafruit_NeoPixel& leds) {
-  currentHue = (int)(currentHue + 100 * spd/255.0) % 65536;
-  for (int i = 0; i < num_pixels; i++) {
-    leds.setPixelColor(i, Adafruit_NeoPixel::ColorHSV(currentHue + i * (255*255 / num_pixels), 255, 255));
-  }
-  leds.show();
+void Rainbow::renderTo(CRGB* leds, int frameTime) {
+  float speedFactor = effectManager->getEffectSpeed()/255.0;
+  float increment = speedFactor * 1000 * frameTime/1000;
+  currentHue = (currentHue + increment);
+  if (currentHue > 255) currentHue -= 255;
+  fill_rainbow(leds, num_pixels, (int)currentHue, effectManager->getEffectIntensity()/10);
 }
 
-void Solid::renderTo(Adafruit_NeoPixel& leds) {
-  for (int i = 0; i < num_pixels; i++) {
-      leds.setPixelColor(i, palette->getPixel((float)i/num_pixels));
-  }
-  leds.show();
+void Solid::renderTo(CRGB* leds, int frameTime) {
+  fill_palette(leds, num_pixels, 0, 255/num_pixels, effectManager->getPalette()->getPalette(), 255, LINEARBLEND);
 }
 
-void Strobe::renderTo(Adafruit_NeoPixel& leds) {
-  strobe_cnt = strobe_cnt + 100 * spd/255.0;
-  for (int i = 0; i < num_pixels; i++) {
-    if (strobe_on)
-      leds.setPixelColor(i, palette->getPixel((float)i/num_pixels));
-    else
-      leds.setPixelColor(i, 0);
+void Strobe::renderTo(CRGB* leds, int frameTime) {
+  
+  if (strobe_on) {
+      fill_palette(leds, num_pixels, 0, 255/num_pixels, effectManager->getPalette()->getPalette(), 255, LINEARBLEND);
+  } else {
+      fill_solid(leds, num_pixels, CRGB::Black);
   }
-  leds.show();
-  if (strobe_cnt > 1000) {
-    strobe_cnt = 0;
-    strobe_on = !strobe_on;
-  }
+  strobe_on = !strobe_on;
 }

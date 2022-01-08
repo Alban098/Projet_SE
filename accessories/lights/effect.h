@@ -1,23 +1,22 @@
-#include "Adafruit_NeoPixel.h"
+#pragma once
+
+class EffectManager;
 
 class Effect {
   protected:
     String label;
-    int spd;   
     int num_pixels;
-    Palette* palette;
+    EffectManager* effectManager;
 
    public:
     Effect(int num_pixels) {
-      this->spd = 255;
       this->num_pixels = num_pixels;
+      this->effectManager = effectManager;
     }
     virtual ~Effect() {}
         
-    virtual void renderTo(Adafruit_NeoPixel& leds) {}
+    virtual void renderTo(CRGB* leds, int frameTime) {}
   
     String getLabel() { return label; }
-    int getSpd() { return spd; }
-    void setSpd(int spd) { this->spd = spd; }
-    void setPalette(Palette* palette) { this->palette = palette; }
+    void linkManager(EffectManager* manager) { this->effectManager = manager; }
 };

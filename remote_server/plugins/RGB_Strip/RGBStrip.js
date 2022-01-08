@@ -1,6 +1,6 @@
 const Item = require("../../models/Item");
 const http = require('http');
-const {randomUUID} = require("crypto");
+const { randomUUID } = require("crypto");
 
 
 class RGBStrip extends Item {
