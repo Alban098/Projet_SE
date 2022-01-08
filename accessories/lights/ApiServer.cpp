@@ -1,44 +1,62 @@
 #include "ApiServer.h"
 
 #define SSID_ADDR       64
-#define PASSWORD_ADDR   128
-#define EEPROM_SIZE     192
+#define PASSWORD_ADDR   96
+#define IP_ADDR         160
+#define GATE_ADDR       164
+#define MASK_ADDR       168
 
 ApiServer::ApiServer(EffectManager* manager) {
   this->effectManager = manager;
 }
 
 void ApiServer::start() {
-  if (!EEPROM.begin(EEPROM_SIZE)) {
-      Serial.println("failed to init EEPROM");
-      delay(1000000);
-  }
-
-  String ssid = "";
-  readEEPROM(SSID_ADDR, &ssid);
-  String pass = "";
-  readEEPROM(PASSWORD_ADDR, &pass);
-  Serial.print("Read SSID : ");
-  Serial.println(ssid);
-  Serial.print("Read Pass : ");
-  Serial.println(pass);
-
-  WiFi.softAP("ESP32", "123456789");
+  EEPROMUtils::init();
   
-  WiFi.begin(ssid.c_str(), pass.c_str());
-  int connection_attemps = 0;
-  while (WiFi.status() != WL_CONNECTED) {
+  uint8_t i[4] = {0, 0, 0, 0};
+  uint8_t g[4] = {0, 0, 0, 0};
+  uint8_t m[4] = {0, 0, 0, 0};
+  EEPROMUtils::readIP(IP_ADDR, i);
+  delay(50);
+  EEPROMUtils::readIP(GATE_ADDR, g);
+  delay(50);
+  EEPROMUtils::readIP(MASK_ADDR, m);
+  delay(50);
+  IPAddress local_IP = IPAddress(i[0], i[1], i[2], i[3]);
+  IPAddress gateway = IPAddress(g[0], g[1], g[2], g[3]);
+  IPAddress mask = IPAddress(m[0], m[1], m[2], m[3]);
+
+  if (!WiFi.config(local_IP, gateway, mask, IPAddress(8, 8, 8, 8), IPAddress(8, 8, 4, 4)))
+    Serial.println("Static Addressing Failed to configure");
+  
+  char netw[64];
+  EEPROMUtils::readString(SSID_ADDR, netw);
+  delay(50);
+  char pass[64];
+  EEPROMUtils::readString(PASSWORD_ADDR, pass);
+  Serial.println(netw);
+  Serial.println(pass);
+  Serial.println(local_IP);
+  Serial.println(gateway);
+  Serial.println(mask);
+
+  WiFi.begin(netw, pass);
+  uint8_t connection_attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && connection_attempts < Params::MAX_WIFI_ATTEMPTS) {
     delay(500);
     Serial.print(".");
-    connection_attemps++;
+    connection_attempts++;
   }
 
   if (WiFi.status() != WL_CONNECTED) {
     WiFi.disconnect();
-    Serial.println("Unable to connect to Wifi, please use integrated Access Point");
+    Serial.println("Unable to connect to Wifi, please use Integrated Access Point ('InfinityCube', '123456789')");
+    WiFi.softAP("InfinityCube", "123456789");
+    Serial.print("Access Point IP : ");
+    Serial.println(WiFi.softAPIP());  
   } else {
     Serial.println("");
-    Serial.print("IP address: ");
+    Serial.print("IP : ");
     Serial.println(WiFi.localIP());
   }
 
@@ -46,9 +64,6 @@ void ApiServer::start() {
   std::function<void(AsyncWebServerRequest *request)> getHandler = std::bind(&ApiServer::handleGet, this, std::placeholders::_1);
   std::function<void(AsyncWebServerRequest *request)> setupHandler = std::bind(&ApiServer::handleSetup, this, std::placeholders::_1);
    
-  Serial.print("AP IP address: ");
-  Serial.println(WiFi.softAPIP());
-
   server.on("/api", HTTP_POST, postHandler);
   server.on("/api", HTTP_GET, getHandler);
   server.on("/setup", HTTP_GET, setupHandler);
@@ -61,11 +76,14 @@ AsyncResponseStream* ApiServer::generateStatusJson(AsyncWebServerRequest *reques
   response->addHeader("type","status");
   DynamicJsonDocument doc(2048);
   doc[Params::PARAM_EFFECT] = effectManager->getEffectId();
-  doc[Params::PARAM_COLOR] = effectManager->getSolidColor();
+  doc[Params::PARAM_PAL] = effectManager->getPaletteId();
+  doc[Params::PARAM_COLOR_0] = effectManager->getPrimaryColor();
+  doc[Params::PARAM_COLOR_1] = effectManager->getSecondaryColor();
+  doc[Params::PARAM_COLOR_2] = effectManager->getTertiaryColor();
   doc[Params::PARAM_SPEED] = effectManager->getEffectSpeed();
   doc[Params::PARAM_INTENSITY] = effectManager->getEffectIntensity();
   doc[Params::PARAM_BRIGHTNESS] = effectManager->getMasterBrightness();
-  String output = "";
+  String output;
   serializeJson(doc, output);
   response->print(output);
   return response;
@@ -75,7 +93,7 @@ AsyncResponseStream* ApiServer::generateEffectsJson(AsyncWebServerRequest *reque
   AsyncResponseStream *response = request->beginResponseStream("application/json");
   response->addHeader("type","effects");
   DynamicJsonDocument doc(2048);
-  for (int i = 0; i < effectManager->getNbEffects(); i++) {
+  for (uint8_t i = 0; i < effectManager->getNbEffects(); i++) {
     doc[effectManager->getEffect(i)->getLabel()] = i;
   }
   String output = "";
@@ -88,7 +106,7 @@ AsyncResponseStream* ApiServer::generatePalettesJson(AsyncWebServerRequest *requ
   AsyncResponseStream *response = request->beginResponseStream("application/json");
   response->addHeader("type","palettes");
   DynamicJsonDocument doc(2048);
-  for (int i = 0; i < effectManager->getNbPalettes(); i++) {
+  for (uint8_t i = 0; i < effectManager->getNbPalettes(); i++) {
     doc[effectManager->getPalette(i)->getLabel()] = i;
   }
   String output = "";
@@ -98,9 +116,10 @@ AsyncResponseStream* ApiServer::generatePalettesJson(AsyncWebServerRequest *requ
 }
 
 void ApiServer::handleGet(AsyncWebServerRequest *request) {
-  int paramsNr = request->params();
-  for(int i=0; i<paramsNr; i++){
+  uint8_t paramsNr = request->params();
+  for(uint8_t i=0; i<paramsNr; i++){
     AsyncWebParameter* p = request->getParam(i);
+    Serial.println(p->name());
     if (strcmp(p->name().c_str(), Params::PARAM_STATUS) == 0) {
       request->send(generateStatusJson(request));
       break;
@@ -112,6 +131,7 @@ void ApiServer::handleGet(AsyncWebServerRequest *request) {
       break;
     }
   }
+  request->send(request->beginResponse_P(200, "text/html", "coucou"));
 }
 
 void ApiServer::handlePost(AsyncWebServerRequest *request) {
@@ -124,8 +144,12 @@ void ApiServer::handlePost(AsyncWebServerRequest *request) {
       effectManager->selectEffect(atoi(p->value().c_str()) % effectManager->getNbEffects());
     } else if (strcmp(p->name().c_str(), Params::PARAM_BRIGHTNESS) == 0) {
       effectManager->setMasterBrightness(atoi(p->value().c_str()) & 255);
-    } else if (strcmp(p->name().c_str(), Params::PARAM_COLOR) == 0) {
-      effectManager->setSolidColor(atoi(p->value().c_str()));
+    } else if (strcmp(p->name().c_str(), Params::PARAM_COLOR_0) == 0) {
+      effectManager->setPrimaryColor(atoi(p->value().c_str()));
+    } else if (strcmp(p->name().c_str(), Params::PARAM_COLOR_1) == 0) {
+      effectManager->setSecondaryColor(atoi(p->value().c_str()));
+    } else if (strcmp(p->name().c_str(), Params::PARAM_COLOR_2) == 0) {
+      effectManager->setTertiaryColor(atoi(p->value().c_str()));
     } else if (strcmp(p->name().c_str(), Params::PARAM_SPEED) == 0) {
       effectManager->setEffectSpeed(atoi(p->value().c_str()));
     } else if (strcmp(p->name().c_str(), Params::PARAM_INTENSITY) == 0) {
@@ -136,45 +160,46 @@ void ApiServer::handlePost(AsyncWebServerRequest *request) {
 }
 
 void ApiServer::handleSetup(AsyncWebServerRequest *request) {
-  int paramsNr = request->params();
+  uint8_t paramsNr = request->params();
   if (paramsNr > 0) {
-    for(int i=0; i<paramsNr; i++){
+    for(uint8_t i=0; i<paramsNr; i++){
       AsyncWebParameter* p = request->getParam(i);
       if (strcmp(p->name().c_str(), "ssid") == 0) {
-        writeEEPROM(SSID_ADDR, p->value().c_str());
+        EEPROMUtils::writeString(SSID_ADDR, p->value().c_str());
       } else if (strcmp(p->name().c_str(), "password") == 0) {
-        writeEEPROM(PASSWORD_ADDR, p->value().c_str());
+        EEPROMUtils::writeString(PASSWORD_ADDR, p->value().c_str());
+      } else if (strcmp(p->name().c_str(), "ip_0") == 0) {
+        EEPROMUtils::writeInt(IP_ADDR, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "ip_1") == 0) {
+        EEPROMUtils::writeInt(IP_ADDR + 1, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "ip_2") == 0) {
+        EEPROMUtils::writeInt(IP_ADDR + 2, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "ip_3") == 0) {
+        EEPROMUtils::writeInt(IP_ADDR + 3, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "gateway_0") == 0) {
+        EEPROMUtils::writeInt(GATE_ADDR, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "gateway_1") == 0) {
+        EEPROMUtils::writeInt(GATE_ADDR + 1, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "gateway_2") == 0) {
+        EEPROMUtils::writeInt(GATE_ADDR + 2, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "gateway_3") == 0) {
+        EEPROMUtils::writeInt(GATE_ADDR + 3, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "mask_0") == 0) {
+        EEPROMUtils::writeInt(MASK_ADDR, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "mask_1") == 0) {
+        EEPROMUtils::writeInt(MASK_ADDR + 1, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "mask_2") == 0) {
+        EEPROMUtils::writeInt(MASK_ADDR + 2, atoi(p->value().c_str()));
+      } else if (strcmp(p->name().c_str(), "mask_3") == 0) {
+        EEPROMUtils::writeInt(MASK_ADDR + 3, atoi(p->value().c_str()));
       }
     }
-    const char index_html[] PROGMEM = "<!DOCTYPE html><html><body><h1>Change Wifi Settings</h1><br><p>Wifi settings updated successfully, the module will now restart and try to connect to the new network !</body></html>";
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html);
+    EEPROMUtils::commit();
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", HTMLPages::WIFI_CONFIRMATION);
     request->send(response);
     resetFunc();
   } else {
-    const char index_html[] PROGMEM = "<!DOCTYPE html><html><body><h1>Change Wifi Settings</h1><form><label>Network SSID : <input name=\"ssid\" autocomplete=\"name\"></label><br><br><label>Password : <input name=\"password\" autocomplete=\"name\"></label><br><br><button>Save</button></form></body></html>";
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html);
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", HTMLPages::WIFI_FORM);
     request->send(response);
   }
-}
-
-void ApiServer::readEEPROM(int addr, String* dest) {
-  int valuePresent = EEPROM.read(addr);
-  if (valuePresent != 0) {
-    int s = 0;
-    for (int i = 0; i < 64; i++) {
-        byte readValue = EEPROM.read(addr + i);
-        if (readValue == 0 || char(readValue) == '\0')
-            break;
-        *dest += char(readValue);
-        s++;
-    }
-  }
-}
-
-void ApiServer::writeEEPROM(int addr, const char* value) {
-  for (int i = 0; i < strlen(value); i++) {
-      EEPROM.write(addr + i, value[i]);
-  }
-  EEPROM.write(addr + strlen(value), '\0');
-  EEPROM.commit();
 }

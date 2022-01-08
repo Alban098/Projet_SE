@@ -11,9 +11,12 @@ class RGBStrip extends Item {
     _pluginsControls = [
         {arg: "palette", name: "Palette", type: "combo", fill_arg: "palettes=0"},
         {arg: "effect", name: "Effect", type: "combo", fill_arg: "effects=0"},
-        {arg: "user_color", name: "Color", type: "color"},
+        {arg: "primary_color", name: "Primary Color", type: "color"},
+        {arg: "secondary_color", name: "Secondary Color", type: "color"},
+        {arg: "tertiary_color", name: "Tertiary Color", type: "color"},
         {arg: "speed", name: "Effect Speed", type: "int"},
-        {arg: "brightness", name: "Intensity", type: "int"}
+        {arg: "intensity", name: "Effect Intensity", type: "int"},
+        {arg: "brightness", name: "Brightness", type: "int"}
     ]
 
     _control_ids_by_arg = [];

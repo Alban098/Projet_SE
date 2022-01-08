@@ -1,9 +1,9 @@
 {
   "plugins": [
     {
-      "name": "WLED",
-      "class": "WLED.js",
-      "config": "WLED.json"
+      "name": "RGB_Strip",
+      "class": "RGBStrip.js",
+      "config": "RGBStrip.json"
     }
   ]
 }

@@ -2,12 +2,15 @@
   "items": [
     {
       "name": "LED Strip 1",
-      "address": "192.168.1.77",
+      "address": "172.20.10.11",
       "controls": [
-        {"name": "Intensity"},
-        {"name": "Color"},
+        {"name": "Brightness"},
+        {"name": "Primary Color"},
+        {"name": "Secondary Color"},
+        {"name": "Tertiary Color"},
         {"name": "Effect"},
         {"name": "Effect Speed"},
+        {"name": "Effect Intensity"},
         {"name": "Palette"}
       ]
     }

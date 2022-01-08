@@ -8,14 +8,16 @@ void EffectManager::init() {
 }
 
 void EffectManager::frame() {
-  effects[effect]->renderTo(leds, frametime);
-  FastLED.show();
-  if (millis() - lastFrame < (unsigned long)frametime)
-    delay(frametime - (millis() - lastFrame));
-  lastFrame = millis();
+  if (brightness > 0) {
+    effects[effect]->renderTo(leds, frametime);
+    FastLED.show();
+    if (millis() - lastFrame < (unsigned long)frametime)
+      delay(frametime - (millis() - lastFrame));
+    lastFrame = millis();
+  }
 }
 
-int EffectManager::getPaletteId() { 
+uint8_t EffectManager::getPaletteId() { 
   return this->palette;
 }
 
@@ -23,11 +25,11 @@ Palette* EffectManager::getPalette() {
   return palettes[palette];
 }
 
-void EffectManager::selectPalette(int palette) { 
-  this->palette = min(Params::NB_PALETTES, max(palette, 0));
+void EffectManager::selectPalette(uint8_t palette) { 
+  this->palette = min(Params::NB_PALETTES, max(palette, (uint8_t)0));
 }
 
-int EffectManager::getEffectId() { 
+uint8_t EffectManager::getEffectId() { 
   return this->effect;
 }
 
@@ -35,49 +37,74 @@ Effect* EffectManager::getEffect() {
   return effects[effect];
 }
 
-void EffectManager::selectEffect(int effect) { 
-  this->effect = min(Params::NB_EFFECTS, max(effect, 0));
+void EffectManager::selectEffect(uint8_t effect) { 
+  this->effect = min(Params::NB_EFFECTS, max(effect, (uint8_t)0));
 }
 
-int EffectManager::getMasterBrightness() {
+uint8_t EffectManager::getMasterBrightness() {
   return this->brightness;
 }
 
-void EffectManager::setMasterBrightness(int brightness) {
-  this->brightness = min(255, max(brightness, 0));
+void EffectManager::setMasterBrightness(uint8_t brightness) {
+  this->brightness = min((uint8_t)255, max(brightness, (uint8_t)0));
+  if (brightness == 0) {
+    fill_solid(leds, Params::NUM_PIXELS, CRGB::Black);
+    FastLED.show();
+  }
   FastLED.setBrightness(brightness);
 }
 
-int EffectManager::getSolidColor() {
-  return this->solidColor;
+uint32_t EffectManager::getPrimaryColor() {
+  return this->primaryColor;
 }
 
-void EffectManager::setSolidColor(int color) {
-  this->solidColor = min(0xFFFFFF, max(color, 0));
-  palettes[0]->setColor(color);
+void EffectManager::setPrimaryColor(uint32_t color) {
+  this->primaryColor = min((uint32_t)0xFFFFFF, max(color, (uint32_t)0));
+  getPalette("Primary Color")->setColor(primaryColor);
+  getPalette("Dual Colors")->setColor(primaryColor, secondaryColor);
+  getPalette("Tri Colors")->setColor(primaryColor, secondaryColor, tertiaryColor);
 }
 
-int EffectManager::getEffectSpeed() {
+uint32_t EffectManager::getSecondaryColor() {
+  return this->secondaryColor;
+}
+
+void EffectManager::setSecondaryColor(uint32_t color) {
+  this->secondaryColor = min((uint32_t)0xFFFFFF, max(color, (uint32_t)0));
+  getPalette("Dual Colors")->setColor(primaryColor, secondaryColor);
+  getPalette("Tri Colors")->setColor(primaryColor, secondaryColor, tertiaryColor);
+}
+
+uint32_t EffectManager::getTertiaryColor() {
+  return this->tertiaryColor;
+}
+
+void EffectManager::setTertiaryColor(uint32_t color) {
+  this->tertiaryColor = min((uint32_t)0xFFFFFF, max(color, (uint32_t)0));
+  getPalette("Tri Colors")->setColor(primaryColor, secondaryColor, tertiaryColor);
+}
+
+uint8_t EffectManager::getEffectSpeed() {
   return this->effectSpeed;
 }
 
-void EffectManager::setEffectSpeed(int spd) {
-  this->effectSpeed = min(255, max(spd, 0));;
+void EffectManager::setEffectSpeed(uint8_t spd) {
+  this->effectSpeed = min((uint8_t)255, max(spd, (uint8_t)0));;
 }
 
-int EffectManager::getEffectIntensity() {
+uint8_t EffectManager::getEffectIntensity() {
   return this->effectIntensity;
 }
 
-void EffectManager::setEffectIntensity(int intensity) {
-  this->effectIntensity = min(255, max(intensity, 0));;
+void EffectManager::setEffectIntensity(uint8_t intensity) {
+  this->effectIntensity = min((uint8_t)255, max(intensity, (uint8_t)0));;
 }
 
-int EffectManager::getNbPalettes() {
+uint8_t EffectManager::getNbPalettes() {
   return Params::NB_PALETTES;
 }
 
-int EffectManager::getNbEffects() {
+uint8_t EffectManager::getNbEffects() {
   return Params::NB_EFFECTS;
 }
 
@@ -86,13 +113,13 @@ Palette* EffectManager::getPalette(String name) {
     if (strcmp(palettes[i]->getLabel().c_str(), name.c_str()) == 0)
       return palettes[i]; 
   }
-  return palettes[0];
+  return new Palette("EMPTY", CRGB::Black);
 }
 
-Palette* EffectManager::getPalette(int id) {
+Palette* EffectManager::getPalette(uint8_t id) {
   return palettes[id]; 
 }
 
-Effect* EffectManager::getEffect(int id) {  
+Effect* EffectManager::getEffect(uint8_t id) {  
   return effects[id]; 
 }

@@ -4,7 +4,8 @@
 #include "ESPAsyncWebServer.h"
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
-#include "EEPROM.h"
+#include "EEPROMUtils.h"
+#include "HTMLPages.h"
 
 class ApiServer {
   private:
@@ -17,9 +18,6 @@ class ApiServer {
     void handleGet(AsyncWebServerRequest *request);
     void handlePost(AsyncWebServerRequest *request);
     void handleSetup(AsyncWebServerRequest *request);
-
-    static void readEEPROM(int addr, String* dest);
-    static void writeEEPROM(int addr, const char* value);
 
     void(* resetFunc) (void) = 0;
 
