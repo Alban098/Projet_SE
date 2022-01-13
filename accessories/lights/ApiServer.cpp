@@ -51,7 +51,7 @@ void ApiServer::start() {
   if (WiFi.status() != WL_CONNECTED) {
     WiFi.disconnect();
     Serial.println("Unable to connect to Wifi, please use Integrated Access Point ('InfinityCube', '123456789')");
-    WiFi.softAP("InfinityCube", "123456789");
+    WiFi.softAP("lights", "123456789");
     Serial.print("Access Point IP : ");
     Serial.println(WiFi.softAPIP());  
   } else {
@@ -119,19 +119,18 @@ void ApiServer::handleGet(AsyncWebServerRequest *request) {
   uint8_t paramsNr = request->params();
   for(uint8_t i=0; i<paramsNr; i++){
     AsyncWebParameter* p = request->getParam(i);
-    Serial.println(p->name());
     if (strcmp(p->name().c_str(), Params::PARAM_STATUS) == 0) {
       request->send(generateStatusJson(request));
-      break;
+      return;
     } else if (strcmp(p->name().c_str(), Params::PARAM_EFFECT_LIST) == 0) {
       request->send(generateEffectsJson(request));
-      break;
+      return;
     } else if (strcmp(p->name().c_str(), Params::PARAM_PALETTE_LIST) == 0) {
       request->send(generatePalettesJson(request));
-      break;
+      return;
     }
   }
-  request->send(request->beginResponse_P(200, "text/html", "coucou"));
+  request->send(generateStatusJson(request));
 }
 
 void ApiServer::handlePost(AsyncWebServerRequest *request) {
@@ -199,7 +198,9 @@ void ApiServer::handleSetup(AsyncWebServerRequest *request) {
     request->send(response);
     resetFunc();
   } else {
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", HTMLPages::WIFI_FORM);
+    char buf[2048];
+    sprintf(buf, HTMLPages::WIFI_FORM, net_ssid, net_pass, net_ip[0], net_ip[1], net_ip[2], net_ip[3], net_gateway[0], net_gateway[1], net_gateway[2], net_gateway[3], net_mask[0], net_mask[1], net_mask[2], net_mask[3]); 
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", buf);
     request->send(response);
   }
 }

@@ -1,6 +1,5 @@
 #include <stdlib.h> 
 #include <string> 
-#include "DHTesp.h" 
 #include "SensorManager.h"
 #include "ApiServer.h"
 #include "Params.h"
