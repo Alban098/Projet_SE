@@ -1,4 +1,5 @@
 #pragma once
+
 #include <stdint.h>
 
 class Params {
@@ -6,7 +7,7 @@ class Params {
     static const uint16_t NUM_PIXELS        = 15;
     static const uint8_t LED_PIN            = 15;
     static const uint8_t NB_EFFECTS         = 21;
-    static const uint8_t NB_PALETTES        = 60;
+    static const uint8_t NB_PALETTES        = 49;
     static const uint8_t FPS                = 60;
     static const uint8_t BRIGHTNESS         = 8;
     static const uint8_t MAX_WIFI_ATTEMPTS  = 25;

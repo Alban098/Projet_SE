@@ -51,7 +51,7 @@ void ApiServer::start() {
   if (WiFi.status() != WL_CONNECTED) {
     WiFi.disconnect();
     Serial.println("Unable to connect to Wifi, please use Integrated Access Point ('InfinityCube', '123456789')");
-    WiFi.softAP("InfinityCube", "123456789");
+    WiFi.softAP("lights", "123456789");
     Serial.print("Access Point IP : ");
     Serial.println(WiFi.softAPIP());  
   } else {
@@ -119,7 +119,6 @@ void ApiServer::handleGet(AsyncWebServerRequest *request) {
   uint8_t paramsNr = request->params();
   for(uint8_t i=0; i<paramsNr; i++){
     AsyncWebParameter* p = request->getParam(i);
-    Serial.println(p->name());
     if (strcmp(p->name().c_str(), Params::PARAM_STATUS) == 0) {
       request->send(generateStatusJson(request));
       break;

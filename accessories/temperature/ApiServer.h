@@ -4,7 +4,8 @@
 #include "ESPAsyncWebServer.h"
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
-#include "EEPROM.h"
+#include "EEPROMUtils.h"
+#include "HTMLPages.h"
 
 class ApiServer {
   private:
