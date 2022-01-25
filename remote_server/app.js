@@ -10,7 +10,6 @@ const jwtAuthz = require('express-jwt-authz');
 
 const app        = express();
 const router 	 = express.Router();
-const routerSecure 	 = express.Router();
 const port 	     = process.env.PORT || 8080;
 
 // Authorization middleware. When used, the Access Token must
@@ -31,11 +30,9 @@ PluginService.loadPlugins().then(() => console.log(PluginService.getCount() + " 
 
 app.use(express.json());
 
-require('./routes/routes')(router);
-app.use('/index/', router);
 
-require('./routes/routesSecure')(routerSecure);
-app.use('/api/', jwtCheck, jwtAuthz(['admin:control']), routerSecure);
+require('./routes/routes')(router);
+app.use('/api/', jwtCheck, jwtAuthz(['admin:control']), router);
 
 app.listen(port);
 

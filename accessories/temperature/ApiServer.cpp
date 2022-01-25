@@ -88,9 +88,10 @@ void ApiServer::handleGet(AsyncWebServerRequest *request) {
     AsyncWebParameter* p = request->getParam(i);
     if (strcmp(p->name().c_str(), Params::PARAM_STATUS) == 0) {
       request->send(generateStatusJson(request));
-      break;
+      return;
     }
   }
+  request->send(generateStatusJson(request));
 }
 
 void ApiServer::handleSetup(AsyncWebServerRequest *request) {
@@ -133,7 +134,8 @@ void ApiServer::handleSetup(AsyncWebServerRequest *request) {
     request->send(response);
     resetFunc();
   } else {
-    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", HTMLPages::WIFI_FORM);
+    const char index_html[] PROGMEM = "<!DOCTYPE html><html><body><h1>Change Wifi Settings</h1><form><label>Network SSID : <input name=\"ssid\" autocomplete=\"name\"></label><br><br><label>Password : <input name=\"password\" autocomplete=\"name\"></label><br><br><button>Save</button></form></body></html>";
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html);
     request->send(response);
   }
 }
