@@ -34,7 +34,7 @@ exports.fetchItemsAction = async function(req, res) {
         let item = ItemService.getItem(id);
 
         //If it exist, push its status to the list
-        if (item !== undefined) {
+        if (item !== undefined && await item.isConnected()) {
             let json = await item.generateJSONMetaData(true)
             items.items.push(json);
         }
@@ -67,9 +67,8 @@ exports.applyAction = async function(req, res) {
     //If the id exist in the API
     if (id !== undefined) {
         let item = ItemService.getItem(id);
-
         //If the item exist in the API
-        if (item !== undefined) {
+        if (item !== undefined && await item.isConnected()) {
 
             //Get all the altered controls
             let controls = req.body.controls;
@@ -115,7 +114,8 @@ exports.synchronizeAllAction = async function(req, res) {
 
     //Fetch each status and append them to the list
     for (let item in ItemService.getAll()) {
-        json.items.push(await ItemService.getAll()[item].toJSON(true));
+        if (ItemService.getAll()[item] !== undefined && await ItemService.getAll()[item].isConnected())
+            json.items.push(await ItemService.getAll()[item].toJSON(true));
     }
 
     //return the list
@@ -149,7 +149,7 @@ exports.synchronizeAction = async function(req, res) {
         let item = ItemService.getItem(id);
 
         //If the item exist, convert to JSON with a pre refetch of it's status
-        if (item !== undefined)
+        if (item !== undefined  && await item.isConnected())
             json = await item.toJSON(true);
         else
             json.error = "Invalid item ID !"

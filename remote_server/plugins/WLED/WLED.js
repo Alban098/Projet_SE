@@ -1,6 +1,4 @@
 const Item = require("../../models/Item");
-const ItemService = require('../../services/ItemService');
-const http = require('http');
 const axios = require('axios');
 const {randomUUID} = require("crypto");
 
@@ -17,7 +15,7 @@ class WLED extends Item {
         {arg: "col_1", index: 1, path: "seg", path_type: "array", name: "Secondary Color", type: "color"},
         {arg: "col_2", index: 2, path: "seg", path_type: "array", name: "Tertiary Color", type: "color"},
         {arg: "sx", path: "seg", path_type: "array", name: "Effect Speed", type: "int"},
-        {arg: "ix", path: "seg", path_type: "array", type: "array", name: "Effect Intensity", type: "int"},
+        {arg: "ix", path: "seg", path_type: "array", name: "Effect Intensity", type: "int"},
         {arg: "bri", name: "Brightness", type: "int"}
     ]
 
@@ -44,7 +42,6 @@ class WLED extends Item {
                     this.addControl(controlUnit)
                 }).catch(err => {
                     console.log(err.code);
-                    ItemService.removeItem(this._id)
                 });
             } else {
                 this.addControl(controlUnit);
@@ -74,7 +71,6 @@ class WLED extends Item {
             }
         }).catch(err => {
             console.log(err.code);
-            ItemService.removeItem(this._id)
         });
     }
 
@@ -88,8 +84,8 @@ class WLED extends Item {
             if (controlUnit.type === 'color')
                 value = [(controlUnit.value >> 16) & 0xFF, (controlUnit.value >> 8) & 0xFF, (controlUnit.value) & 0xFF];
             if (controlUnit.type === 'boolean')
-                value = controlUnit.value === 0 ? false : true;
-            if (controlParam.path != undefined) {
+                value = controlUnit.value !== 0;
+            if (controlParam.path !== undefined) {
                 if (controlParam.path_type === "array") {
                     if (data[controlParam.path] === undefined)
                         data[controlParam.path] = [{}];
@@ -124,7 +120,6 @@ class WLED extends Item {
 
         await axios.post("http://" + this.address + "/json/state", data).catch(err => {
             console.log(err.code)
-            ItemService.removeItem(this._id)
         });
         return this.fetch();
     }

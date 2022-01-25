@@ -2,6 +2,7 @@ const Item = require("../../models/Item");
 const ItemService = require('../../services/ItemService');
 const http = require('http');
 const {randomUUID} = require("crypto");
+const axios = require("axios");
 
 
 class THSensor extends Item {
@@ -33,48 +34,30 @@ class THSensor extends Item {
     }
 
     fetch() {
-        return this._send('GET', 'status=0');
+        return axios.get("http://" + this.address + this._api_URL, { params: {status: 0} }).then(res => {
+            for (let arg in res.data) {
+                if (this.controls[this._control_ids_by_arg[arg]] !== undefined)
+                    this.controls[this._control_ids_by_arg[arg]].value = res.data[arg];
+            }
+        }).catch(err => {
+            console.error(err.code + " (" + this.address + ") failed to respond [" + err.name + "]");
+        });
     }
 
     propagate() {
-        return new Promise((resolve => {
-            resolve(0);
-        }));
-    }
-
-    _send(method, data) {
-        return new Promise((resolve) => {
-            let options = {
-                host: this.address,
-                path: this._api_URL,
-                method: method,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Content-Length': Buffer.byteLength(data)
-                }
-            };
-
-            let self = this;
-            let request = http.request(options, (res) => {
-                res.setEncoding('utf8');
-                res.on('data', function (chunk) {
-                    let status = JSON.parse(chunk);
-                    for (let arg in status) {
-                        if (self.controls[self._control_ids_by_arg[arg]] !== undefined)
-                            self.controls[self._control_ids_by_arg[arg]].value = status[arg];
-                    }
-                    resolve(0);
-                });
-                res.on('error', function(err) {
-                    console.error(this.name + " (" + self.address + ") failed to respond [" + err.name + "]")
-                    ItemService.removeItem(this._id)
-                    resolve(0);
-                })
-            });
-            request.write(data);
-            request.end();
+        let data = {};
+        for (let id in this.controls)
+            data[this._control_args_by_id[id]] = this.controls[id].value;
+        return axios.post("http://" + this.address + this._api_URL, null, { params: data}).then(res => {
+            for (let arg in res.data) {
+                if (this.controls[this._control_ids_by_arg[arg]] !== undefined)
+                    this.controls[this._control_ids_by_arg[arg]].value = res.data[arg];
+            }
+        }).catch(err => {
+            console.error(err.code + " (" + this.address + ") failed to respond [" + err.name + "]");
         });
     }
+
 }
 
 module.exports = THSensor;

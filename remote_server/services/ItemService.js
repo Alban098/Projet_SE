@@ -7,7 +7,8 @@ exports.clearItems = function() {
  * @param item the Item to register
  */
 exports.registerItem = function(item) {
-    this._items[item.id] = item;
+    if (item.isConnected())
+        this._items[item.id] = item;
 }
 
 exports.removeItem = function(id) {

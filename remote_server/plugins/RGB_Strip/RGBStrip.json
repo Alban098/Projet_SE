@@ -13,6 +13,20 @@
         {"name": "Effect Intensity"},
         {"name": "Palette"}
       ]
+    },
+    {
+      "name": "Infinity Cube",
+      "address": "172.20.10.12",
+      "controls": [
+        {"name": "Brightness"},
+        {"name": "Primary Color"},
+        {"name": "Secondary Color"},
+        {"name": "Tertiary Color"},
+        {"name": "Effect"},
+        {"name": "Effect Speed"},
+        {"name": "Effect Intensity"},
+        {"name": "Palette"}
+      ]
     }
   ]
 }

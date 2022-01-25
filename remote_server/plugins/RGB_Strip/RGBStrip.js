@@ -1,6 +1,5 @@
 const Item = require("../../models/Item");
-const ItemService = require('../../services/ItemService');
-const http = require('http');
+const axios = require('axios');
 const { randomUUID } = require("crypto");
 
 
@@ -9,8 +8,8 @@ class RGBStrip extends Item {
     _api_URL = "/api";
 
     _pluginsControls = [
-        {arg: "palette", name: "Palette", type: "combo", fill_arg: "palettes=0"},
-        {arg: "effect", name: "Effect", type: "combo", fill_arg: "effects=0"},
+        {arg: "palette", name: "Palette", type: "combo", fill_arg: "palettes"},
+        {arg: "effect", name: "Effect", type: "combo", fill_arg: "effects"},
         {arg: "primary_color", name: "Primary Color", type: "color"},
         {arg: "secondary_color", name: "Secondary Color", type: "color"},
         {arg: "tertiary_color", name: "Tertiary Color", type: "color"},
@@ -19,98 +18,96 @@ class RGBStrip extends Item {
         {arg: "brightness", name: "Brightness", type: "int"}
     ]
 
+    _enabled_controls;
+
     _control_ids_by_arg = [];
     _control_args_by_id = [];
 
     constructor(id, name, address, enabledControls) {
         super(id, name, address);
+        this._enabled_controls = enabledControls;
         for (let index in this._pluginsControls) {
             let pluginsControl = this._pluginsControls[index];
-            let id = randomUUID();
-            let controlUnit = {id: id, name: pluginsControl.name, type: pluginsControl.type, control: pluginsControl.arg, present: false, read_only: false};
-            this._control_ids_by_arg[pluginsControl.arg] = id;
-            this._control_args_by_id[id] = pluginsControl.arg;
-            for (let i in enabledControls) {
-                if (enabledControls[i].name === pluginsControl.name)
-                    controlUnit.present = true;
-            }
-            if (pluginsControl.type === "combo") {
-                controlUnit.choices = [];
-                let options = {
-                    host: this.address,
-                    path: this._api_URL,
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Content-Length': Buffer.byteLength(pluginsControl.fill_arg)
-                    }
+            if (pluginsControl.type !== "combo") {
+                let id = randomUUID();
+                let controlUnit = {
+                    id: id,
+                    name: pluginsControl.name,
+                    type: pluginsControl.type,
+                    control: pluginsControl.arg,
+                    present: false,
+                    read_only: false
                 };
-                let self = this;
-                let request = http.request(options, (res) => {
-                    res.setEncoding('utf8');
-                    res.on('data', function (chunk) {
-                        //Fetch choices and then save them to the ControlUnit
-                        let choices = JSON.parse(chunk);
-                        for (let choice in choices)
-                            controlUnit.choices[choices[choice]] = choice;
-                        self.addControl(controlUnit)
-                    });
-                    res.on('error', function(err) {
-                        console.error(this.name + " : Combo (" + name + ") failed to report choices [" + err.name + "]");
-                        ItemService.removeItem(this._id);
-                    })
-                });
-                request.write(pluginsControl.fill_arg);
-                request.end();
-            } else {
+                this._control_ids_by_arg[pluginsControl.arg] = id;
+                this._control_args_by_id[id] = pluginsControl.arg;
+                for (let i in enabledControls) {
+                    if (enabledControls[i].name === pluginsControl.name)
+                        controlUnit.present = true;
+                }
                 this.addControl(controlUnit);
             }
         }
+        this.fillComboChoices();
     }
 
-    fetch() {
-        return this._send('GET', 'status=0');
+    async fetch() {
+        if (!this.hasControl("combo"))
+            await this.fillComboChoices();
+        return axios.get("http://" + this.address + this._api_URL, {params: {status: 0}}).then(res => {
+            for (let arg in res.data) {
+                if (this.controls[this._control_ids_by_arg[arg]] !== undefined)
+                    this.controls[this._control_ids_by_arg[arg]].value = res.data[arg];
+            }
+        }).catch(err => {
+            console.error(err.code + " (" + this.address + ") failed to respond [fetch]");
+        });
     }
 
     propagate() {
-        let data = "";
+        let data = {};
         for (let id in this.controls)
-            data += this._control_args_by_id[id] + "=" + this.controls[id].value + "&";
-        return this._send('POST', data);
+            data[this._control_args_by_id[id]] = this.controls[id].value;
+        return axios.post("http://" + this.address + this._api_URL, null, { params: data}).then(res => {
+            for (let arg in res.data) {
+                if (this.controls[this._control_ids_by_arg[arg]] !== undefined)
+                    this.controls[this._control_ids_by_arg[arg]].value = res.data[arg];
+            }
+        }).catch(err => {
+            console.error(err.code + " (" + this.address + ") failed to respond [propagate]");
+        });
     }
 
-    _send(method, data) {
-        return new Promise((resolve) => {
-            let options = {
-                host: this.address,
-                path: this._api_URL,
-                method: method,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Content-Length': Buffer.byteLength(data)
+    async fillComboChoices() {
+        for (let index in this._pluginsControls) {
+            let pluginsControl = this._pluginsControls[index];
+            if (pluginsControl.type === "combo") {
+                let id = randomUUID();
+                let controlUnit = {
+                    id: id,
+                    name: pluginsControl.name,
+                    type: pluginsControl.type,
+                    control: pluginsControl.arg,
+                    present: false,
+                    read_only: false
+                };
+                this._control_ids_by_arg[pluginsControl.arg] = id;
+                this._control_args_by_id[id] = pluginsControl.arg;
+                for (let i in this._enabled_controls) {
+                    if (this._enabled_controls[i].name === pluginsControl.name)
+                        controlUnit.present = true;
                 }
-            };
-
-            let self = this;
-            let request = http.request(options, (res) => {
-                res.setEncoding('utf8');
-                res.on('data', function (chunk) {
-                    let status = JSON.parse(chunk);
-                    for (let arg in status) {
-                        if (self.controls[self._control_ids_by_arg[arg]] !== undefined)
-                            self.controls[self._control_ids_by_arg[arg]].value = status[arg];
-                    }
-                    resolve(0);
+                controlUnit.choices = [];
+                let params = {}
+                params[pluginsControl.fill_arg] = 0;
+                await axios.get("http://" + this.address + this._api_URL, {params: params}).then(res => {
+                    for (let choice in res.data)
+                        controlUnit.choices[res.data[choice]] = choice;
+                    this.addControl(controlUnit)
+                }).catch(err => {
+                    console.error(err.code + " (" + this.address + ") failed to respond");
                 });
-                res.on('error', function(err) {
-                    console.error(this.name + " (" + self.address + ") failed to respond [" + err.name + "]");
-                    ItemService.removeItem(this._id);
-                    resolve(0);
-                })
-            });
-            request.write(data);
-            request.end();
-        });
+            }
+        }
     }
 }
 

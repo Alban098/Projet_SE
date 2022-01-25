@@ -3,6 +3,8 @@ const IntControlUnit = require("./IntControlUnit");
 const FloatControlUnit = require("./FloatSliderControlUnit");
 const ComboControlUnit = require("./ComboControlUnit");
 const BooleanControlUnit = require("./BooleanControlUnit");
+const ping = require("ping");
+
 
 /**
  * Represent an Item connected to the API
@@ -34,10 +36,13 @@ class Item {
      */
     _address;
 
+    _enabled;
+
     constructor(id, name, address) {
         this._id = id;
         this._name = name;
         this._address = address;
+        this._enabled = true;
     }
 
     addControl(control) {
@@ -76,6 +81,19 @@ class Item {
         return this._controls;
     }
 
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(value) {
+        this._enabled = value;
+    }
+
+    async isConnected() {
+        const result = await ping.promise.probe(this.address, {timeout: 2});
+        return result.alive;
+    }
+
     /**
      * Set the value of a ControlUnit
      * @param id the ControlUnit id
@@ -84,6 +102,14 @@ class Item {
     setControlValue(id, value) {
         if (this._controls[id] !== undefined && this._controls[id]._editable && this._controls[id]._present)
             this._controls[id].value = value;
+    }
+
+    hasControl(type) {
+        for (let id in this._controls) {
+            if (this._controls[id].type === type)
+                return true;
+        }
+        return false;
     }
 
     /**

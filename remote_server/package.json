@@ -12,7 +12,8 @@
     "express-oauth2-jwt-bearer": "^1.1.0",
     "jsonwebtoken": "^7.1.9",
     "jwks-rsa": "^2.0.5",
-    "mongoose": "^6.1.2"
+    "mongoose": "^6.1.2",
+    "ping": "^0.4.1"
   },
   "script": {},
   "keywords": [],

@@ -50,7 +50,7 @@ void ApiServer::start() {
 
   if (WiFi.status() != WL_CONNECTED) {
     WiFi.disconnect();
-    Serial.println("Unable to connect to Wifi, please use Integrated Access Point ('InfinityCube', '123456789')");
+    Serial.println("Unable to connect to Wifi, please use Integrated Access Point ('lights', '123456789')");
     WiFi.softAP("lights", "123456789");
     Serial.print("Access Point IP : ");
     Serial.println(WiFi.softAPIP());  
